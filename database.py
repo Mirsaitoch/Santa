@@ -169,6 +169,15 @@ class Database:
         conn.close()
         return result[0] if result else None
 
+    def get_giver_by_receiver(self, receiver_id: int) -> Optional[int]:
+        """Получить, кто дарит подарок получателю"""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT giver_id FROM assignments WHERE receiver_id = ?', (receiver_id,))
+        result = cursor.fetchone()
+        conn.close()
+        return result[0] if result else None
+
     def get_all_assignments(self) -> List[Tuple]:
         """Получить все распределения"""
         conn = self.get_connection()

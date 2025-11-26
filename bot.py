@@ -628,6 +628,30 @@ async def receive_wishlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем вишлист
     db.update_wishlist(user.id, wishlist_text)
     
+    # Проверяем, есть ли распределение и кто дарит подарок этому пользователю
+    giver_id = db.get_giver_by_receiver(user.id)
+    
+    if giver_id:
+        # Получаем информацию о пользователе, который обновил вишлист
+        user_info = db.get_user(user.id)
+        if user_info:
+            _, _, first_name, last_name, _, _ = user_info
+            user_full_name = f"{first_name} {last_name or ''}".strip()
+            
+            # Отправляем уведомление дарителю
+            notification_text = f"🔔 Обновление вишлиста!\n\n"
+            notification_text += f"Получатель {user_full_name} обновил свой вишлист:\n\n"
+            notification_text += f"{wishlist_text}"
+            
+            try:
+                await context.bot.send_message(
+                    chat_id=giver_id,
+                    text=notification_text
+                )
+                logger.info(f"Уведомление об обновлении вишлиста отправлено дарителю {giver_id}")
+            except Exception as e:
+                logger.error(f"Не удалось отправить уведомление дарителю {giver_id}: {e}")
+    
     await update.message.reply_text(
         "✅ Вишлист успешно обновлен!\n\n"
         f"Ваш вишлист:\n{wishlist_text}\n\n"
